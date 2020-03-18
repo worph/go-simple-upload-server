@@ -1,0 +1,2 @@
+rem docker run --rm -v C:\Workspace\ApteroVR\tmp\blend\media:/media/ zocker160/blender /media/a.blend -o /media/frame_### -f 1
+docker run -p 25478:25478 -v ./data/:/var/root mayth/simple-upload-server app -token f9403fc5f537b4ab332d /var/root
