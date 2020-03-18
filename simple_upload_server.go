@@ -23,6 +23,7 @@ func run(args []string) int {
 	logLevelFlag := flag.String("loglevel", "info", "logging level")
 	certFile := flag.String("cert", "", "path to certificate file")
 	keyFile := flag.String("key", "", "path to key file")
+	spath := flag.String("spath", "", "sub path for server url")
 	flag.Parse()
 	serverRoot := flag.Arg(0)
 	if len(serverRoot) == 0 {
@@ -46,9 +47,9 @@ func run(args []string) int {
 		logger.WithField("token", token).Warn("token generated")
 	}
 	tlsEnabled := *certFile != "" && *keyFile != ""
-	server := NewServer(serverRoot, *maxUploadSize, token)
-	http.Handle("/upload", server)
-	http.Handle("/files/", server)
+	server := NewServer(serverRoot, *maxUploadSize, token,*spath)
+	http.Handle(*spath+"/upload", server)
+	http.Handle(*spath+"/files/", server)
 
 	errors := make(chan error)
 

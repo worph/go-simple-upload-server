@@ -21,25 +21,27 @@ type Server struct {
 	// MaxUploadSize limits the size of the uploaded content, specified with "byte".
 	MaxUploadSize int64
 	SecureToken   string
+	URLSubpath string
 }
 
 // NewServer creates a new simple-upload server.
-func NewServer(documentRoot string, maxUploadSize int64, token string) Server {
+func NewServer(documentRoot string, maxUploadSize int64, token string,urlsubpath string) Server {
 	return Server{
 		DocumentRoot:  documentRoot,
 		MaxUploadSize: maxUploadSize,
 		SecureToken:   token,
+		URLSubpath:urlsubpath,
 	}
 }
 
 func (s Server) handleGet(w http.ResponseWriter, r *http.Request) {
-	re := regexp.MustCompile(`^/files/([^/]+)$`)
+	re := regexp.MustCompile(`^`+s.URLSubpath+`/files/([^/]+)$`)
 	if !re.MatchString(r.URL.Path) {
 		w.WriteHeader(http.StatusNotFound)
-		writeError(w, fmt.Errorf("\"%s\" is not found", r.URL.Path))
+		writeError(w, fmt.Errorf("\"%s\" is not found 1", r.URL.Path))
 		return
 	}
-	http.StripPrefix("/files/", http.FileServer(http.Dir(s.DocumentRoot))).ServeHTTP(w, r)
+	http.StripPrefix(s.URLSubpath+"/files/", http.FileServer(http.Dir(s.DocumentRoot))).ServeHTTP(w, r)
 }
 
 func (s Server) handlePost(w http.ResponseWriter, r *http.Request) {
@@ -104,7 +106,7 @@ func (s Server) handlePost(w http.ResponseWriter, r *http.Request) {
 	if !strings.HasPrefix(uploadedURL, "/") {
 		uploadedURL = "/" + uploadedURL
 	}
-	uploadedURL = "/files" + uploadedURL
+	uploadedURL = s.URLSubpath+"/files" + uploadedURL
 	logger.WithFields(logrus.Fields{
 		"path": dstPath,
 		"url":  uploadedURL,
@@ -115,7 +117,7 @@ func (s Server) handlePost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s Server) handlePut(w http.ResponseWriter, r *http.Request) {
-	re := regexp.MustCompile(`^/files/([^/]+)$`)
+	re := regexp.MustCompile(`^`+s.URLSubpath+`/files/([^/]+)$`)
 	matches := re.FindStringSubmatch(r.URL.Path)
 	if matches == nil {
 		logger.WithField("path", r.URL.Path).Info("invalid path")
